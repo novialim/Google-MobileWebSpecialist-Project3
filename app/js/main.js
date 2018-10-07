@@ -153,19 +153,16 @@ const createRestaurantHTML = (restaurant) => {
   name.innerHTML = restaurant.name;
   div.append(name);
 
-  console.log("is_favorite: ", restaurant["is_favorite"]);
-  const isFavorite = (restaurant["is_favorite"] && restaurant["is_favorite"].toString() === "true") ? true : false;
-  const favoriteDiv = document.createElement("div");
-  favoriteDiv.className = "favorite-icon";
-  const favorite = document.createElement("button");
+  console.log('is_favorite: ', restaurant['is_favorite']);
+  const isFavorite = (restaurant['is_favorite'] && restaurant['is_favorite'].toString() === 'true') ? true : false;
+  const favoriteDiv = document.createElement('div');
+  favoriteDiv.className = 'favorite-icon';
+  const favorite = document.createElement('button');
   favorite.style.background = isFavorite
-    ? `url("/icons/outline-favorite-24px.svg") no-repeat`
-    : `url("/icons/outline-favorite_border-24px.svg") no-repeat`;
-  // favorite.innerHTML = isFavorite
-  //   ? restaurant.name + " is a favorite"
-  //   : restaurant.name + " is not a favorite";
-  favorite.id = "favorite-icon-" + restaurant.id;
-  favorite.onclick = event => handleFavoriteClick(restaurant.id, !isFavorite);
+    ? `url('/icons/outline-favorite-24px.svg') no-repeat`
+    : `url('/icons/outline-favorite_border-24px.svg') no-repeat`;
+  favorite.id = 'favorite-icon-' + restaurant.id;
+  favorite.onclick = event => handleFavClick(restaurant.id, !isFavorite);
   favoriteDiv.append(favorite);
   div.append(favoriteDiv);
 
@@ -185,6 +182,19 @@ const createRestaurantHTML = (restaurant) => {
 
   return li
 }
+
+const handleFavClick = (id, newState) => {
+  // Update properties of the restaurant data object
+  const favorite = document.getElementById("favorite-icon-" + id);
+  const restaurant = self
+    .restaurants
+    .filter(r => r.id === id)[0];
+  if (!restaurant)
+    return;
+  restaurant["is_favorite"] = newState;
+  favorite.onclick = event => handleFavoriteClick(restaurant.id, !restaurant["is_favorite"]);
+  DBHelper.handleFavClick(id, newState);
+};
 
 /**
  * Add markers for current restaurants to the map.
