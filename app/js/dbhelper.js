@@ -366,7 +366,6 @@ class DBHelper {
   }
 
   static addPendingRequestToQueue(url, method, body) {
-    // Open the database ad add the request details to the pending table
     const dbPromise = idb.open('udacity-restaurant')
     dbPromise.then(db => {
       const tx = db.transaction('pending', 'readwrite')
@@ -390,11 +389,9 @@ class DBHelper {
   }
 
   static attemptCommitPending(callback) {
-    // Iterate over the pending items until there is a network failure
     let url
     let method
     let body
-    //const dbPromise = idb.open('fm-udacity-restaurant');
     dbPromise.then(db => {
       if (!db.objectStoreNames.length) {
         console.log('DB not available')
