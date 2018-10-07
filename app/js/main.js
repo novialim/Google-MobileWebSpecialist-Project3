@@ -161,6 +161,9 @@ const createRestaurantHTML = (restaurant) => {
   favorite.style.background = isFavorite
     ? `url('/icons/outline-favorite-24px.svg') no-repeat`
     : `url('/icons/outline-favorite_border-24px.svg') no-repeat`
+  favorite.innerHTML = isFavorite
+    ? restaurant.name + ' is a favorite restaurant'
+    : restaurant.name + ' is not a favorite restaurant'
   favorite.id = 'favorite-icon-' + restaurant.id
   favorite.onclick = event => handleFavClick(restaurant.id, !isFavorite)
   favoriteDiv.append(favorite)
