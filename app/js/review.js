@@ -4,20 +4,17 @@ var map
 /**
  * Initialize Google map, called from HTML.
  */
-window.initMap = () => {
+const documentReady = () => {
+  console.log('hit onload')
   fetchRestaurantFromURL((error, restaurant) => {
-    if (error) { // Got an error!
+    if (error) {
+      // Got an error!
       console.error(error)
     } else {
-      self.map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 16,
-        center: restaurant.latlng,
-        scrollwheel: false
-      })
       fillBreadcrumb()
-      DBHelper.mapMarkerForRestaurant(self.restaurant, self.map)
     }
   })
+  DBHelper.nextPending()
 }
 
 /**
@@ -50,6 +47,8 @@ const fetchRestaurantFromURL = (callback) => {
  */
 const fillRestaurantHTML = (restaurant = self.restaurant) => {
 
+  console.log("IN fullRestaurantHTML the id is.... " + restaurant.id)
+
   const div = document.getElementById('maincontent')
   const isFavorite = (restaurant['is_favorite'] && restaurant['is_favorite'].toString() === 'true') ? true : false
   const favoriteDiv = document.createElement('div')
@@ -59,7 +58,7 @@ const fillRestaurantHTML = (restaurant = self.restaurant) => {
     ? `url('/icons/outline-favorite-24px.svg') no-repeat`
     : `url('/icons/outline-favorite_border-24px.svg') no-repeat`
   favorite.id = 'favorite-icon-' + restaurant.id
-  // favorite.onclick = event => handleFavoriteClick(restaurant.id, !isFavorite)
+  favorite.onclick = event => handleFavClick(restaurant.id, !isFavorite)
   favoriteDiv.append(favorite)
   div.append(favoriteDiv)
 
@@ -120,10 +119,13 @@ const handleFavClick = (id, newState) => {
   const favorite = document.getElementById('favorite-icon-' + id)
   self.restaurant['is_favorite'] = newState
   favorite.onclick = event => handleFavClick(restaurant.id, !self.restaurant['is_favorite'])
-  DBHelper.handleFavoriteClick(id, newState)
+  DBHelper.handleFavClick(id, newState)
 }
 
 const saveReview = () => {
+
+  console.log("ID ISSSSS: " + restaurant.id)
+
   // Get the data points for the review
   const name = document
     .getElementById('reviewName')

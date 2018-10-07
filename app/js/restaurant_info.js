@@ -82,7 +82,7 @@ const fillRestaurantHTML = (restaurant = self.restaurant) => {
     fillRestaurantHoursHTML()
   }
   // fill reviews
-  fillReviewsHTML()
+  DBHelper.fetchRestaurantReviewsById(restaurant.id, fillReviewsHTML)
 }
 
 /**
@@ -109,38 +109,41 @@ const fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hour
  * Create all reviews HTML and add them to the webpage.
  */
 const fillReviewsHTML = (error, reviews) => {
-  self.restaurant.reviews = reviews;
+
+  console.log("you are in fillReviewsHTML")
+
+  self.restaurant.reviews = reviews
 
   if (error) {
-    console.log("Error retrieving restaurant review: ", error);
+    console.log('Error retrieving restaurant review: ', error)
   }
 
-  const container = document.getElementById("reviews-container");
-  const flex = document.createElement("div");
-  flex.id = "reviews-heading";
-  container.appendChild(flex);
+  const container = document.getElementById('reviews-container')
+  const flex = document.createElement('div')
+  flex.id = 'reviews-heading'
+  container.appendChild(flex)
 
-  const title = document.createElement("h3");
-  title.innerHTML = "Reviews";
-  flex.appendChild(title);
+  const title = document.createElement('h3')
+  title.innerHTML = 'Reviews'
+  flex.appendChild(title)
 
-  const addReviewLink = document.createElement("a");
-  addReviewLink.href = `/review.html?id=${self.restaurant.id}`;
-  addReviewLink.innerHTML = "Add Review";
-  flex.appendChild(addReviewLink);
+  const addReviewLink = document.createElement('a')
+  addReviewLink.href = `/review.html?id=${self.restaurant.id}`
+  addReviewLink.innerHTML = 'Add Review'
+  flex.appendChild(addReviewLink)
 
   if (!reviews) {
-    const noReviews = document.createElement("p");
-    noReviews.innerHTML = "No reviews yet!";
-    container.appendChild(noReviews);
-    return;
+    const noReviews = document.createElement('p')
+    noReviews.innerHTML = 'No reviews yet!'
+    container.appendChild(noReviews)
+    return
   }
-  const ul = document.getElementById("reviews-list");
+  const ul = document.getElementById('reviews-list')
   reviews.forEach(review => {
-    ul.appendChild(createReviewHTML(review));
-  });
-  container.appendChild(ul);
-};
+    ul.appendChild(createReviewHTML(review))
+  })
+  container.appendChild(ul)
+}
 
 /**
  * Create review HTML and add it to the webpage.
@@ -152,7 +155,8 @@ const createReviewHTML = (review) => {
   li.appendChild(name)
 
   const date = document.createElement('p')
-  date.innerHTML = review.date
+  const created = review.createdAt
+  date.innerHTML = new Date(created).toLocaleString()
   li.appendChild(date)
 
   const rating = document.createElement('p')

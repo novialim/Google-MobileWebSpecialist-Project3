@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="css/styles.css" type="text/css">
   <link rel="manifest" href="/manifest.json">
   <title>Create Review</title>
-  <script type="module" src="js/swController.js"></script>
 </head>
 
 <body class="inside">
@@ -81,7 +80,7 @@
 
   <!-- Beginning footer -->
   <footer id="footer">
-    Copyright (c) 2017
+    Copyright (c) 2018
     <a href="/">
       <strong>Restaurant Reviews</strong>
     </a> All Rights Reserved.
@@ -92,6 +91,14 @@
 <script type="application/javascript" charset="utf-8" src="js/dbhelper.js"></script>
 <script type="application/javascript" charset="utf-8" src="js/helper.js"></script>
 <script type="application/javascript" charset="utf-8" src="js/review.js"></script>
+<script type="module" src="js/swController.js"></script>
+
+<script>
+  (function() {
+    documentReady();
+  })();
+</script>
+
 <script async defer
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCO8ZrEfmkOSOeC9da-FWlnFUWP4nC-Xco&callback=initMap">
 </script>

@@ -1,46 +1,45 @@
-import idb from 'idb';
+import idb from 'idb'
 
-var cacheID = 'mws-restaurant-001';
+var cacheID = 'mws-restaurant-002'
 
 const dbPromise = idb.open('udacity-restaurant', 4, upgradeDB => {
   switch (upgradeDB.oldVersion) {
     case 0:
-      upgradeDB.createObjectStore('restaurants', {keyPath: 'id'});
-      break;
-    case 1:
+      upgradeDB.createObjectStore('restaurants', { keyPath: 'id' })
+    case 1: {
+      const reviewsStore = upgradeDB.createObjectStore('reviews', { keyPath: 'id' })
+      reviewsStore.createIndex('restaurant_id', 'restaurant_id')
+    }
+    case 2:
       upgradeDB.createObjectStore('pending', {
         keyPath: 'id',
         autoIncrement: true
-      });
-  }
-});
-
-var urlsToCache = [
-  './',
-  '/js/main.js',
-  '/js/dbhelper.js',
-  '/js/restaurant_info.js',
-  '/index.html',
-  '/restaurant.html',
-  '/css/styles.css',
-  'img',
-  '/js/swController.js'
-]
-
-self.addEventListener('install', function (event) {
-  // Perform install steps
-  console.log('installing ServiceWorker')
-  event.waitUntil(
-    caches.open(cacheID)
-      .then(function (cache) {
-        console.log('Opened cache')
-        return cache.addAll(urlsToCache)
-          .catch(error => {
-            console.log('Caches open failed: ' + error);
-          })
       })
-  )
+  }
 })
+
+self.addEventListener('install', event => {
+  event.waitUntil(caches.open(cacheID).then(cache => {
+    return cache
+      .addAll([
+        './',
+        '/js/main.js',
+        '/js/dbhelper.js',
+        '/js/restaurant_info.js',
+        '/js/review.js',
+        '/index.html',
+        '/restaurant.html',
+        '/review.html',
+        '/css/styles.css',
+        'img',
+        '/js/swController.js'
+      ])
+      .catch(error => {
+        console.log('Caches open failed: ' + error)
+      })
+  }))
+})
+
 //
 // self.addEventListener('activate', function (event) {
 //   console.log('in activate')
@@ -71,26 +70,43 @@ self.addEventListener('fetch', function (event) {
   const URLCheck = new URL(event.request.url)
   if (URLCheck.port === '1337') {
     const parts = URLCheck.pathname.split('/')
-    const id =
-      parts[parts.length - 1] === 'restaurants'
-        ? '-1'
-        : parts[parts.length - 1]
-    fetchJSON(event, id)
+    let id = URLCheck
+      .searchParams
+      .get('restaurant_id') - 0
+    if (!id) {
+      if (URLCheck.pathname.indexOf('restaurants')) {
+        id = parts[parts.length - 1] === 'restaurants'
+          ? '-1'
+          : parts[parts.length - 1]
+      } else {
+        id = URLCheck
+          .searchParams
+          .get('id')
+      }
+    }
+    console.log('THE ID IS' + id)
+    handleAJAXEvent(event, id)
   } else {
     cacheResponse(event, cacheRequest)
   }
 })
 
-function fetchJSON(event, id) {
+const handleAJAXEvent = (event, id) => {
   // Only use caching for GET events
   if (event.request.method !== 'GET') {
     return fetch(event.request)
       .then(fetchResponse => fetchResponse.json())
       .then(json => {
         return json
-      });
+      })
   }
-    handleRestaurantEvent(event, id);
+
+  // Split these request for handling restaurants vs reviews
+  if (event.request.url.indexOf('reviews') > -1) {
+    handleReviewsEvent(event, id)
+  } else {
+    handleRestaurantEvent(event, id)
+  }
 }
 
 const handleRestaurantEvent = (event, id) => {
@@ -98,30 +114,61 @@ const handleRestaurantEvent = (event, id) => {
     return db
       .transaction('restaurants')
       .objectStore('restaurants')
-      .get(id);
+      .get(id)
   }).then(data => {
     return (data && data.data) || fetch(event.request)
       .then(fetchResponse => fetchResponse.json())
       .then(json => {
         return dbPromise.then(db => {
-          const tx = db.transaction('restaurants', 'readwrite');
-          const store = tx.objectStore('restaurants');
-          store.put({id: id, data: json});
-          return json;
-        });
-      });
+          const tx = db.transaction('restaurants', 'readwrite')
+          const store = tx.objectStore('restaurants')
+          store.put({ id: id, data: json })
+          return json
+        })
+      })
   }).then(finalResponse => {
-    return new Response(JSON.stringify(finalResponse));
+    return new Response(JSON.stringify(finalResponse))
   }).catch(error => {
-    return new Response('Error fetching data', {status: 500} + error);
-  }));
-};
+    return new Response('Error fetching data', { status: 500 } + error)
+  }))
+}
 
+const handleReviewsEvent = (event, id) => {
+  event.respondWith(dbPromise.then(db => {
+    return db
+      .transaction('reviews')
+      .objectStore('reviews')
+      .index('restaurant_id')
+      .getAll(id)
+  }).then(data => {
+    return (data.length && data) || fetch(event.request)
+      .then(fetchResponse => fetchResponse.json())
+      .then(data => {
+        return dbPromise.then(idb => {
+          const itx = idb.transaction('reviews', 'readwrite')
+          const store = itx.objectStore('reviews')
+          data.forEach(review => {
+            store.put({ id: review.id, 'restaurant_id': review['restaurant_id'], data: review })
+          })
+          return data
+        })
+      })
+  }).then(finalResponse => {
+    if (finalResponse[0].data) {
+      // Need to transform the data to the proper format
+      const mapResponse = finalResponse.map(review => review.data)
+      return new Response(JSON.stringify(mapResponse))
+    }
+    return new Response(JSON.stringify(finalResponse))
+  }).catch(error => {
+    return new Response('Error fetching data', { status: 500 })
+  }))
+}
 
-function cacheResponse(event, cacheRequest){
+function cacheResponse(event, cacheRequest) {
   event.respondWith(
     caches.match(cacheRequest).then(response => {
-      return response || fetch(event.request).then(responseF =>{
+      return response || fetch(event.request).then(responseF => {
         return caches.open(cacheID).then(cache => {
           if (responseF.url.indexOf('browser-sync') === -1) {
             cache.put(event.request, responseF.clone())
@@ -138,5 +185,5 @@ function cacheResponse(event, cacheRequest){
         })
       })
     })
-  );
+  )
 }

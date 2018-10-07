@@ -8,8 +8,11 @@ const dbPromise = idb.open('udacity-restaurant', 4, upgradeDB => {
   switch (upgradeDB.oldVersion) {
     case 0:
       upgradeDB.createObjectStore('restaurants', { keyPath: 'id' })
-      break
-    case 1:
+    case 1: {
+      const reviewsStore = upgradeDB.createObjectStore('reviews', { keyPath: 'id' })
+      reviewsStore.createIndex('restaurant_id', 'restaurant_id')
+    }
+    case 2:
       upgradeDB.createObjectStore('pending', {
         keyPath: 'id',
         autoIncrement: true
@@ -26,6 +29,11 @@ class DBHelper {
   static get DATABASE_URL() {
     const port = 1337 // Change this to your server port
     return `http://localhost:${port}/restaurants`
+  }
+
+  static get DATABASE_REVIEWS_URL() {
+    const port = 1337 // Change this to your server port
+    return `http://localhost:${port}/reviews`
   }
 
   /**
@@ -66,6 +74,21 @@ class DBHelper {
         }
       }
     })
+  }
+
+  static fetchRestaurantReviewsById(id, callback) {
+    // Fetch all reviews for the specific restaurant
+    const fetchURL = DBHelper.DATABASE_REVIEWS_URL + '/?restaurant_id=' + id
+    fetch(fetchURL, { method: 'GET' }).then(response => {
+      if (!response.clone().ok && !response.clone().redirected) {
+        throw 'No reviews available'
+      }
+      response
+        .json()
+        .then(result => {
+          callback(null, result)
+        })
+    }).catch(error => callback(error, null))
   }
 
   /**
@@ -206,7 +229,9 @@ class DBHelper {
   }
 
   static saveNewReview(id, bodyObj, callback) {
-    // Push the request into the waiting queue in IDB
+    // Push the request into the waiting queue in IDB'
+
+    console.log('in saveNewReview')
     const url = `${DBHelper.DATABASE_REVIEWS_URL}`
     const method = 'POST'
     DBHelper.updateCachedRestaurantReview(id, bodyObj)
@@ -398,7 +423,6 @@ class DBHelper {
               .then(callback())
             return
           }
-
 
           const properties = {
             body: JSON.stringify(body),
