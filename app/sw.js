@@ -22,16 +22,16 @@ self.addEventListener('install', event => {
   event.waitUntil(caches.open(cacheID).then(cache => {
     return cache
       .addAll([
-        './',
+        '/',
+        '/index.html',
+        '/restaurant.html',
         '/js/main.js',
         '/js/dbhelper.js',
         '/js/restaurant_info.js',
         '/js/review.js',
-        '/index.html',
-        '/restaurant.html',
         '/review.html',
         '/css/styles.css',
-        'img',
+        '/img/undefined.jpg',
         '/js/swController.js'
       ])
       .catch(error => {
@@ -92,6 +92,7 @@ self.addEventListener('fetch', function (event) {
 })
 
 const handleAJAXEvent = (event, id) => {
+  console.log("IN handleAJAXEvent")
   // Only use caching for GET events
   if (event.request.method !== 'GET') {
     return fetch(event.request)

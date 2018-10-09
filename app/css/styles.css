@@ -212,16 +212,26 @@ nav h1 a {
   min-height: 380px;
   padding: 0 30px 25px;
   text-align: left;
-  width: 295px;
+  width: 265px;
 }
 
 /* Smartphones (portrait and landscape) ----------- */
 @media only screen and (min-device-width: 320px) and (max-device-width: 480px) {
   /* Styles */
   #restaurants-list li {
+    width: 100% !important
+  }
+}
+
+@media only screen
+and (min-device-width: 900px)
+and (max-device-width: 768px) {
+
+  #restaurants-list li {
     width: 100%
   }
 }
+
 
 #restaurants-list .restaurant-img {
   background-color: #ccc;
@@ -566,6 +576,7 @@ and (max-device-width: 1024px) {
   max-width: 800px;
   width: 100%;
   padding-bottom: 65px;
+  padding-top: 160px;
 }
 
 #review-entry label span {
